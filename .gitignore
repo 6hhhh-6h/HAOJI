@@ -1,0 +1,26 @@
+# Node/Electron
+node_modules/
+dist/
+out/
+coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS & editor
+.DS_Store
+.idea/
+.vscode/
+
+# Build artifacts
+*.dmg
+*.zip
+*.blockmap
+*.app
+
+# Local data caches (app runtime)
+neonNotesData.json
+neonAISettings.json

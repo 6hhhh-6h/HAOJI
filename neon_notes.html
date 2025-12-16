@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Glass Notes</title>
+    <style>
+        /* --- 1. 全局变量与重置 --- */
+        :root {
+            --bg-dark: #0f172a;
+            --text-main: #ffffff;
+            --text-secondary: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-glow: 0 0 20px rgba(118, 75, 162, 0.5);
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- 2. 背景氛围光斑 (营造玻璃质感的关键) --- */
+        .ambient-light {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.6;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .light-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #764ba2; }
+        .light-2 { bottom: -10%; right: -10%; width: 600px; height: 600px; background: #00d2ff; }
+        .light-3 { top: 40%; left: 40%; width: 300px; height: 300px; background: #ff0099; opacity: 0.3; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(20px, 40px); }
+        }
+
+        /* --- 3. 主布局 --- */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+            backdrop-filter: blur(5px); /* 全局微模糊 */
+        }
+
+        /* --- 左侧侧边栏 --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--glass-bg);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .brand { display: flex; flex-direction: column; align-items: flex-start; margin-top: 8px; margin-left: 16px; margin-bottom: 56px; }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+        .logo-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: var(--accent-gradient);
+            color: #fff;
+            box-shadow: var(--accent-glow);
+            font-weight: 600;
+        }
+
+        .btn-new-category {
+            margin-top: auto;
+            padding: 12px;
+            border: 1px dashed var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-new-category:hover {
+            border-color: #fff;
+            color: #fff;
+        }
+
+        /* --- 右侧主区域 --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 40px;
+            overflow: hidden;
+        }
+
+        /* 顶部栏 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px 12px 40px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+        .search-bar input:focus {
+            border-color: #764ba2;
+            background: rgba(0, 0, 0, 0.4);
+        }
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .btn-create {
+            background: var(--accent-gradient);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 30px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--accent-glow);
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-create:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* 笔记网格区 (瀑布流/Grid) */
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            overflow-y: auto;
+            padding-bottom: 40px;
+            padding-right: 10px;
+        }
+
+        /* 自定义滚动条 */
+        .notes-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .notes-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .notes-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        /* 笔记卡片样式 */
+        .note-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 220px;
+        }
+
+        .note-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .card-tag {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+
+        .card-date {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #fff;
+            line-height: 1.4;
+        }
+
+        .card-excerpt {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+            flex: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        /* --- 模态框 (Modal) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal {
+            width: 600px;
+            max-width: 90%;
+            height: 70vh;
+            background: #1e293b;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        /* 删除确认弹窗 */
+        .delete-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 110; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+        .delete-modal-overlay.active { display: flex; opacity: 1; }
+        .delete-modal { width: 460px; max-width: 90%; background: #1e293b; border: 1px solid var(--glass-border); border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+        .delete-header { border: 2px solid #ef4444; border-radius: 10px; padding: 10px 12px; color: #fecaca; font-weight: 700; }
+        .delete-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-input-title {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            width: 100%;
+            outline: none;
+        }
+
+        .modal-textarea {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--glass-border);
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); color: white; }
+
+        /* --- 响应式适配 --- */
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                flex-direction: row; 
+                align-items: center; 
+                padding: 10px 20px;
+                overflow-x: auto;
+            }
+            .logo { margin-bottom: 0; margin-right: 20px; font-size: 1.2rem;}
+            .nav-group { flex-direction: row; }
+            .btn-new-category { display: none; }
+            .main-content { padding: 20px; }
+            .search-bar { width: 100%; display: none; /* 手机端简化隐藏搜索 */ }
+            header { justify-content: flex-end; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景光斑 -->
+    <div class="ambient-light light-1"></div>
+    <div class="ambient-light light-2"></div>
+    <div class="ambient-light light-3"></div>
+
+    <div class="app-container">
+        <!-- 左侧侧边栏 -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo">浩记</div>
+                <div class="logo-subtitle">“浩大的记录”</div>
+            </div>
+            <nav class="nav-group" id="navGroup"></nav>
+            <div class="btn-new-category" onclick="openTagModal()">+ 新建分类</div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <header>
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="搜索笔记..." id="searchInput">
+                </div>
+                <button class="btn-create" onclick="openAISettings()">AI设置</button>
+                <button class="btn-create" onclick="openModal()">
+                    <span>+</span> 新建笔记
+                </button>
+            </header>
+
+            <div class="notes-grid" id="notesGrid">
+                <!-- 笔记卡片将通过JS插入这里 -->
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑模态框 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <input type="text" class="modal-input-title" placeholder="输入标题..." id="modalTitle">
+                <select id="modalTag" class="modal-select"></select>
+            </div>
+            <div id="modalContent" class="modal-textarea" contenteditable="true"></div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="aiSummarize()">AI摘要</button>
+                <button class="btn-ghost" onclick="aiSuggestTag()">AI推荐分类</button>
+                <button class="btn-ghost" onclick="closeModal()">取消</button>
+                <button class="btn-create" onclick="saveAndClose()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 标签管理 -->
+    <div class="modal-overlay" id="tagModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <input type="text" class="modal-input-title" value="标签管理" disabled>
+            </div>
+            <div id="tagList" style="display:flex;flex-direction:column;gap:10px"></div>
+            <div style="display:flex;gap:8px;margin-top:12px" id="tagNew">
+                <input id="newTagLabel" class="modal-textarea" style="height:40px" placeholder="标签名称">
+                <input id="newTagIcon" class="modal-textarea" style="height:40px" placeholder="图标，如 💼">
+                <input id="newTagColor" class="modal-textarea" style="height:40px" placeholder="#颜色，如 #60a5fa">
+                <button class="btn-create" onclick="addTag()">添加</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="closeTagModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="delete-modal-overlay" id="deleteModalOverlay">
+        <div class="delete-modal">
+            <div class="delete-header" id="deleteTitle"></div>
+            <div style="color:#cbd5e1">确定要删除这条笔记吗？该操作不可恢复。</div>
+            <div class="delete-actions">
+                <button class="btn-ghost" onclick="cancelDelete()">取消</button>
+                <button class="btn-create" onclick="confirmDelete()">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="aiModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <input type="text" class="modal-input-title" value="AI设置" disabled>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+                <input id="aiBaseUrl" class="modal-textarea" style="height:44px" placeholder="Base URL，例如 https://api.openai.com/v1">
+                <input id="aiModel" class="modal-textarea" style="height:44px" placeholder="模型，例如 gpt-4o-mini">
+                <input id="aiApiKey" class="modal-textarea" style="height:44px" placeholder="API Key">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="testAIConnection()">测试连接</button>
+                <button class="btn-ghost" onclick="closeAISettings()">取消</button>
+                <button class="btn-create" onclick="saveAISettings()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let notes = [];
+        const notesGrid = document.getElementById('notesGrid');
+        const searchInput = document.getElementById('searchInput');
+        let currentFilterTag = 'all';
+        let searchQuery = '';
+        let tags = [];
+        const defaultTags = [
+            { key: 'Work', label: '工作', icon: '💼', color: '#60a5fa' },
+            { key: 'Life', label: '生活', icon: '☕', color: '#34d399' },
+            { key: 'Ideas', label: '灵感', icon: '💡', color: '#f472b6' },
+            { key: 'Study', label: '学习', icon: '📚', color: '#ffc107' }
+        ];
+        let aiSettings = { baseURL: 'https://api.openai.com/v1', model: 'gpt-4o-mini', apiKey: '' };
+        function loadTags() {
+            const s = storage.get('neonNotesTags');
+            try {
+                const parsed = s ? JSON.parse(s) : null;
+                tags = Array.isArray(parsed) && parsed.length ? parsed : defaultTags.slice();
+            } catch (_) {
+                tags = defaultTags.slice();
+                storage.remove('neonNotesTags');
+            }
+        }
+        function saveTags() { storage.set('neonNotesTags', JSON.stringify(tags)); }
+        function getTagByKey(k) { return tags.find(t => t.key === k); }
+        const storage = {
+            get: (k) => {
+                try {
+                    if (window.neonStore && typeof window.neonStore.get === 'function') return window.neonStore.get(k);
+                } catch (_) {}
+                return localStorage.getItem(k);
+            },
+            set: (k, v) => {
+                try {
+                    if (window.neonStore && typeof window.neonStore.set === 'function') return window.neonStore.set(k, v);
+                } catch (_) {}
+                localStorage.setItem(k, v);
+            },
+            remove: (k) => {
+                try {
+                    if (window.neonStore && typeof window.neonStore.remove === 'function') return window.neonStore.remove(k);
+                } catch (_) {}
+                localStorage.removeItem(k);
+            }
+        };
+
+        function loadNotes() {
+            const s = storage.get('neonNotesData');
+            try {
+                notes = s ? JSON.parse(s) : [];
+            } catch (e) {
+                notes = [];
+                storage.remove('neonNotesData');
+            }
+        }
+
+        function saveNotesToLocalStorage() {
+            storage.set('neonNotesData', JSON.stringify(notes));
+        }
+
+        function loadAISettings() {
+            const s = storage.get('neonAISettings');
+            try {
+                const parsed = s ? JSON.parse(s) : null;
+                if (parsed && parsed.baseURL && parsed.model) aiSettings = parsed;
+            } catch (_) {}
+        }
+        function saveAISettings() {
+            const b = document.getElementById('aiBaseUrl');
+            const m = document.getElementById('aiModel');
+            const k = document.getElementById('aiApiKey');
+            aiSettings.baseURL = b ? b.value.trim() || aiSettings.baseURL : aiSettings.baseURL;
+            aiSettings.model = m ? m.value.trim() || aiSettings.model : aiSettings.model;
+            if (k) aiSettings.apiKey = k.value.trim();
+            storage.set('neonAISettings', JSON.stringify(aiSettings));
+            const btn = document.querySelector('#aiModalOverlay .btn-create');
+            if (btn) { btn.innerHTML = '已保存 ✓'; setTimeout(() => { closeAISettings(); btn.innerHTML = '保存'; }, 500); }
+        }
+        const aiModalOverlay = document.getElementById('aiModalOverlay');
+        function openAISettings() {
+            loadAISettings();
+            if (aiModalOverlay) {
+                aiModalOverlay.classList.add('active');
+                const b = document.getElementById('aiBaseUrl');
+                const m = document.getElementById('aiModel');
+                const k = document.getElementById('aiApiKey');
+                if (b) b.value = aiSettings.baseURL || '';
+                if (m) m.value = aiSettings.model || '';
+                if (k) k.value = aiSettings.apiKey || '';
+            }
+        }
+        function closeAISettings() { if (aiModalOverlay) aiModalOverlay.classList.remove('active'); }
+
+        async function callAI(messages, temperature = 0.2) {
+            loadAISettings();
+            const url = (aiSettings.baseURL || '').replace(/\/$/, '') + '/chat/completions';
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (aiSettings.apiKey || '') },
+                body: JSON.stringify({ model: aiSettings.model || 'gpt-4o-mini', messages, temperature })
+            });
+            const data = await res.json();
+            const c = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+            return c || '';
+        }
+
+        async function testAIConnection() {
+            const b = document.getElementById('aiBaseUrl');
+            const m = document.getElementById('aiModel');
+            const k = document.getElementById('aiApiKey');
+            const baseURL = (b ? b.value.trim() : aiSettings.baseURL) || '';
+            const model = (m ? m.value.trim() : aiSettings.model) || '';
+            const apiKey = (k ? k.value.trim() : aiSettings.apiKey) || '';
+            const btns = document.querySelectorAll('#aiModalOverlay .modal-footer .btn-ghost');
+            const testBtn = btns && btns[0] ? btns[0] : null;
+            if (testBtn) testBtn.innerHTML = '测试中…';
+            try {
+                const url = baseURL.replace(/\/$/, '') + '/chat/completions';
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+                    body: JSON.stringify({ model, messages: [{ role: 'user', content: 'ping' }], max_tokens: 5 })
+                });
+                if (res.ok) {
+                    if (testBtn) testBtn.innerHTML = '连接成功 ✓';
+                } else {
+                    let msg = '';
+                    try { const j = await res.json(); msg = (j && (j.error && j.error.message || j.message)) || ''; } catch (_) { try { msg = await res.text(); } catch (__){ msg = res.statusText || ''; } }
+                    const hintMismatch = /api\.openai\.com/.test(baseURL) && /^glm/i.test(model);
+                    const hint = hintMismatch ? '\n提示：OpenAI地址搭配GLM模型不兼容，请将Base URL改为 https://open.bigmodel.cn/api/paas/v4 并使用GLM系列模型名。' : '';
+                    alert(`连接失败：HTTP ${res.status} ${msg}${hint}`);
+                    if (testBtn) testBtn.innerHTML = '连接失败';
+                }
+            } catch (e) {
+                alert('连接失败：网络或地址不可达');
+                if (testBtn) testBtn.innerHTML = '连接失败';
+            }
+            setTimeout(() => { if (testBtn) testBtn.innerHTML = '测试连接'; }, 1200);
+        }
+
+        async function aiSuggestTag() {
+            const title = modalTitle ? modalTitle.value.trim() : '';
+            const contentText = modalContent ? modalContent.innerText.trim() : '';
+            if (!aiSettings.apiKey) { alert('请先在 AI设置 中填写 API Key'); return; }
+            const list = tags.map(t => `${t.key}:${t.label}`).join(', ');
+            const btns = document.querySelectorAll('.modal-footer .btn-ghost');
+            if (btns && btns[1]) btns[1].innerHTML = '生成中…';
+            try {
+                const out = await callAI([
+                    { role: 'system', content: '从给定标签中选择最合适的一个，仅返回标签key。' },
+                    { role: 'user', content: `可选标签: ${list}\n标题: ${title}\n内容: ${contentText}` }
+                ]);
+                const key = out.trim().split(/\s|\n/)[0];
+                const exist = getTagByKey(key);
+                if (exist && modalTag) modalTag.value = key;
+            } catch (e) { alert('AI推荐失败'); }
+            if (btns && btns[1]) btns[1].innerHTML = 'AI推荐分类';
+        }
+
+        async function aiSummarize() {
+            const title = modalTitle ? modalTitle.value.trim() : '';
+            const contentText = getContentText();
+            if (!aiSettings.apiKey) { alert('请先在 AI设置 中填写 API Key'); return; }
+            const btns = document.querySelectorAll('.modal-footer .btn-ghost');
+            if (btns && btns[0]) btns[0].innerHTML = '生成中…';
+            try {
+                const out = await callAI([
+                    { role: 'system', content: '你是摘要助手，只能基于用户提供文本，禁止臆造与补充外部信息。用中文输出严格JSON：{"summary":"不超过40字","title":"不超过20字或空"}。不得输出除JSON外的任何字符。' },
+                    { role: 'user', content: `原始标题: ${title || '(空)'}\n原始内容:\n${contentText}` }
+                ], 0.1);
+                let summary = '';
+                let newTitle = '';
+                try {
+                    const start = out.indexOf('{');
+                    const end = out.lastIndexOf('}') + 1;
+                    const jsonStr = start >= 0 && end > start ? out.slice(start, end) : out;
+                    const obj = JSON.parse(jsonStr);
+                    summary = (obj.summary || '').trim();
+                    newTitle = (obj.title || '').trim();
+                } catch (_) {
+                    summary = out.trim().slice(0, 40);
+                }
+                if (!title && newTitle && modalTitle) modalTitle.value = newTitle.slice(0, 20);
+                if (summary) updateSummaryLine(summary);
+            } catch (e) { alert('AI摘要失败'); }
+            if (btns && btns[0]) btns[0].innerHTML = 'AI摘要';
+        }
+
+        let userEditedTitle = false;
+        let userEditedTag = false;
+        let autoAITimer = null;
+        function updateSummaryLine(text) {
+            const p = document.getElementById('aiSummaryLine');
+            if (p) {
+                p.innerHTML = `<em>AI摘要：${text}</em>`;
+            } else {
+                const el = document.createElement('p');
+                el.id = 'aiSummaryLine';
+                el.innerHTML = `<em>AI摘要：${text}</em>`;
+                modalContent.innerHTML = el.outerHTML + modalContent.innerHTML;
+            }
+        }
+        function debounce(fn, delay) {
+            return (...args) => { clearTimeout(autoAITimer); autoAITimer = setTimeout(() => fn(...args), delay); };
+        }
+        const runAutoAI = async () => {
+            if (!aiSettings.apiKey) return;
+            const title = modalTitle ? modalTitle.value.trim() : '';
+            const contentText = getContentText();
+            if (!contentText || contentText.length < 10) return;
+            const list = tags.map(t => `${t.key}:${t.label}`).join(', ');
+            try {
+                const out = await callAI([
+                    { role: 'system', content: '根据用户内容生成严格JSON：{"summary":"≤40字","title":"≤20字或空","tagKey":"从可选标签中选一个key"}。只能使用可选标签列表中的key。不得输出除JSON外的任何字符。' },
+                    { role: 'user', content: `可选标签: ${list}\n标题: ${title || '(空)'}\n内容: ${contentText}` }
+                ], 0.1);
+                let obj = null;
+                try {
+                    const s = out.indexOf('{');
+                    const e = out.lastIndexOf('}') + 1;
+                    obj = JSON.parse(out.slice(s, e));
+                } catch (_) { return; }
+                const summary = (obj.summary || '').trim();
+                const autoTitle = (obj.title || '').trim();
+                const key = (obj.tagKey || '').trim();
+                if (summary) updateSummaryLine(summary);
+                if (!userEditedTitle && !title && autoTitle && modalTitle) modalTitle.value = autoTitle.slice(0, 20);
+                if (!userEditedTag && key && getTagByKey(key) && modalTag) modalTag.value = key;
+            } catch (_) {}
+        };
+        const debouncedAutoAI = debounce(runAutoAI, 800);
+        function startAutoAI() {
+            userEditedTitle = false; userEditedTag = false;
+            if (modalTitle) modalTitle.oninput = () => { userEditedTitle = true; debouncedAutoAI(); };
+            if (modalTag) modalTag.onchange = () => { userEditedTag = true; };
+            if (modalContent) {
+                modalContent.oninput = () => { debouncedAutoAI(); };
+                modalContent.addEventListener('keyup', () => { debouncedAutoAI(); });
+                modalContent.addEventListener('paste', () => { setTimeout(() => debouncedAutoAI(), 10); });
+            }
+        }
+
+        function getContentText() {
+            if (!modalContent) return '';
+            const clone = modalContent.cloneNode(true);
+            const s = clone.querySelector('#aiSummaryLine');
+            if (s) s.remove();
+            return clone.textContent.trim();
+        }
+
+        function renderNotes() {
+            notesGrid.innerHTML = '';
+            const tagFiltered = currentFilterTag === 'all' ? notes : notes.filter(n => n.tag === currentFilterTag);
+            const filtered = !searchQuery ? tagFiltered : tagFiltered.filter(n => {
+                const t = (n.title || '').toLowerCase();
+                const c = (n.content || '').replace(/<[^>]+>/g, '').toLowerCase();
+                return t.includes(searchQuery) || c.includes(searchQuery);
+            });
+            filtered.forEach(note => {
+                const card = document.createElement('div');
+                card.className = 'note-card';
+                card.onclick = (e) => { if (e.target.className !== 'delete-btn') openModal(note); };
+                const meta = getTagByKey(note.tag) || { label: note.tag, icon: '🏷️', color: '#a5b4fc' };
+                const tagColor = meta.color;
+                card.innerHTML = `
+                    <div class="card-tag" style="color:${tagColor}; border:1px solid ${tagColor}44">
+                        <span class="tag-icon">${meta.icon}</span> ${meta.label}
+                        <span class="delete-btn" onclick="handleDeleteClick(event, ${note.id})">×</span>
+                    </div>
+                    <div class="card-date">${note.date || ''}</div>
+                    <h3 class="card-title">${note.title}</h3>
+                    <p class="card-excerpt">${note.content}</p>
+                `;
+                notesGrid.appendChild(card);
+            });
+        }
+
+        function filterNotes(tag, element) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            currentFilterTag = tag;
+            renderNotes();
+        }
+
+        const navGroup = document.getElementById('navGroup');
+        function renderNav() {
+            if (!navGroup) return;
+            navGroup.innerHTML = '';
+            const allItem = document.createElement('div');
+            allItem.className = 'nav-item' + (currentFilterTag === 'all' ? ' active' : '');
+            allItem.dataset.tag = 'all';
+            allItem.innerHTML = '📌 全部';
+            allItem.onclick = () => filterNotes('all', allItem);
+            navGroup.appendChild(allItem);
+            tags.forEach(t => {
+                const item = document.createElement('div');
+                item.className = 'nav-item' + (currentFilterTag === t.key ? ' active' : '');
+                item.dataset.tag = t.key;
+                item.innerHTML = `${t.icon} ${t.label}`;
+                item.onclick = () => filterNotes(t.key, item);
+                navGroup.appendChild(item);
+            });
+        }
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+        const modalTag = document.getElementById('modalTag');
+        let currentEditingNoteId = null;
+
+        function openModal(note = null) {
+            modalOverlay.classList.add('active');
+            if (note) {
+                currentEditingNoteId = note.id;
+                modalTitle.value = note.title;
+                modalContent.innerHTML = note.content;
+                if (modalTag) modalTag.value = note.tag;
+            } else {
+                currentEditingNoteId = null;
+                modalTitle.value = '';
+                modalContent.innerHTML = '';
+                if (modalTag) modalTag.value = '';
+            }
+            startAutoAI();
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+        }
+
+        function saveAndClose() {
+            const title = modalTitle.value.trim();
+            const contentHtml = modalContent.innerHTML.trim();
+            const contentText = getContentText();
+            if (!title || !contentText) {
+                alert('标题和内容不能为空！');
+                return;
+            }
+            const tag = modalTag ? (modalTag.value || 'Ideas') : 'Ideas';
+            if (currentEditingNoteId !== null) {
+                const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+                if (idx !== -1) {
+                    notes[idx].title = title;
+                    notes[idx].content = contentHtml;
+                    notes[idx].tag = tag;
+                }
+            } else {
+                const newNote = {
+                    id: Date.now(),
+                    title,
+                    content: contentHtml,
+                    tag,
+                    date: new Date().toLocaleDateString('zh-CN')
+                };
+                notes.unshift(newNote);
+            }
+            saveNotesToLocalStorage();
+            renderNotes();
+            const btn = document.querySelector('.modal-footer .btn-create');
+            btn.innerHTML = '已保存 ✓';
+            setTimeout(() => { closeModal(); btn.innerHTML = '保存'; }, 500);
+        }
+
+        let pendingDeleteId = null;
+        const deleteModalOverlay = document.getElementById('deleteModalOverlay');
+        const deleteTitleEl = document.getElementById('deleteTitle');
+        function handleDeleteClick(e, id) { e.stopPropagation(); openDeleteModal(id); }
+        function openDeleteModal(id) {
+            pendingDeleteId = id;
+            const n = notes.find(x => x.id === id);
+            deleteTitleEl.textContent = (n && n.title) ? n.title : '未命名笔记';
+            deleteModalOverlay.classList.add('active');
+        }
+        function cancelDelete() {
+            pendingDeleteId = null;
+            deleteModalOverlay.classList.remove('active');
+        }
+        function confirmDelete() {
+            if (pendingDeleteId === null) return;
+            notes = notes.filter(n => n.id !== pendingDeleteId);
+            saveNotesToLocalStorage();
+            renderNotes();
+            pendingDeleteId = null;
+            deleteModalOverlay.classList.remove('active');
+        }
+
+        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim().toLowerCase();
+                renderNotes();
+            });
+        }
+
+        function renderModalTagOptions() {
+            if (!modalTag) return;
+            modalTag.innerHTML = '';
+            const blank = document.createElement('option');
+            blank.value = '';
+            blank.textContent = '自动推荐';
+            modalTag.appendChild(blank);
+            tags.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.key;
+                opt.textContent = `${t.icon} ${t.label}`;
+                modalTag.appendChild(opt);
+            });
+        }
+
+        const tagModalOverlay = document.getElementById('tagModalOverlay');
+        const tagList = document.getElementById('tagList');
+        function openTagModal() { if (tagModalOverlay) { tagModalOverlay.classList.add('active'); renderTagList(); } }
+        function closeTagModal() { if (tagModalOverlay) tagModalOverlay.classList.remove('active'); }
+        function renderTagList() {
+            if (!tagList) return;
+            tagList.innerHTML = '';
+            tags.forEach(t => {
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.gap = '8px';
+                row.innerHTML = `
+                    <input class="modal-textarea" style="height:40px" value="${t.label}" onchange="updateTagField('${t.key}','label',this.value)">
+                    <input class="modal-textarea" style="height:40px" value="${t.icon}" onchange="updateTagField('${t.key}','icon',this.value)">
+                    <input class="modal-textarea" style="height:40px" value="${t.color}" onchange="updateTagField('${t.key}','color',this.value)">
+                    <button class="btn-ghost" onclick="deleteTag('${t.key}')">删除</button>
+                `;
+                tagList.appendChild(row);
+            });
+        }
+        function addTag() {
+            const labelEl = document.getElementById('newTagLabel');
+            const iconEl = document.getElementById('newTagIcon');
+            const colorEl = document.getElementById('newTagColor');
+            const label = labelEl ? labelEl.value.trim() : '';
+            const icon = iconEl && iconEl.value.trim() ? iconEl.value.trim() : '🏷️';
+            const color = colorEl && colorEl.value.trim() ? colorEl.value.trim() : '#a5b4fc';
+            if (!label) return;
+            const key = 'tag_' + Date.now();
+            tags.push({ key, label, icon, color });
+            saveTags(); renderNav(); renderModalTagOptions(); renderTagList();
+        }
+        function deleteTag(key) {
+            const idx = tags.findIndex(t => t.key === key);
+            if (idx === -1) return;
+            tags.splice(idx, 1);
+            const fallback = tags[0] ? tags[0].key : 'Ideas';
+            if (!tags.length) { tags = defaultTags.slice(); }
+            notes = notes.map(n => n.tag === key ? { ...n, tag: fallback } : n);
+            saveTags(); saveNotesToLocalStorage(); renderNav(); renderModalTagOptions(); renderNotes(); renderTagList();
+        }
+        function updateTagField(key, field, value) {
+            const t = getTagByKey(key);
+            if (!t) return;
+            t[field] = value;
+            saveTags(); renderNav(); renderModalTagOptions(); renderNotes(); renderTagList();
+        }
+
+        window.onload = () => { loadAISettings(); loadTags(); renderNav(); renderModalTagOptions(); loadNotes(); renderNotes(); };
+        
+    </script>
+</body>
+</html>
