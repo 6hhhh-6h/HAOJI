@@ -571,7 +571,13 @@
             const k = document.getElementById('aiApiKey');
             aiSettings.baseURL = b ? b.value.trim() || aiSettings.baseURL : aiSettings.baseURL;
             aiSettings.model = m ? m.value.trim() || aiSettings.model : aiSettings.model;
-            if (k) aiSettings.apiKey = k.value.trim();
+            const keyVal = k ? k.value.trim() : '';
+            if (window.neonSecret && typeof window.neonSecret.set === 'function') {
+                window.neonSecret.set('ai_api_key', keyVal).then(() => {}).catch(() => {});
+                aiSettings.apiKey = '';
+            } else {
+                aiSettings.apiKey = keyVal;
+            }
             storage.set('neonAISettings', JSON.stringify(aiSettings));
             const btn = document.querySelector('#aiModalOverlay .btn-create');
             if (btn) { btn.innerHTML = '已保存 ✓'; setTimeout(() => { closeAISettings(); btn.innerHTML = '保存'; }, 500); }
@@ -587,6 +593,9 @@
                 if (b) b.value = aiSettings.baseURL || '';
                 if (m) m.value = aiSettings.model || '';
                 if (k) k.value = aiSettings.apiKey || '';
+                if (k && window.neonSecret && typeof window.neonSecret.get === 'function') {
+                    window.neonSecret.get('ai_api_key').then(v => { if (v) k.value = v; }).catch(() => {});
+                }
             }
         }
         function closeAISettings() { if (aiModalOverlay) aiModalOverlay.classList.remove('active'); }

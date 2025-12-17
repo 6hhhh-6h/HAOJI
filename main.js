@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+let keytar;
+try { keytar = require('keytar'); } catch (_) { keytar = null; }
 
 function storeFilePath() {
   return path.join(app.getPath('userData'), 'neon-notes.json');
@@ -46,6 +48,15 @@ ipcMain.on('store:remove', (event, key) => {
   delete data[key];
   writeStore(data);
   event.returnValue = true;
+});
+
+ipcMain.handle('secret:get', async (_event, key) => {
+  if (!keytar) return null;
+  try { return await keytar.getPassword('Haoji', key); } catch (_) { return null; }
+});
+ipcMain.handle('secret:set', async (_event, key, value) => {
+  if (!keytar) return false;
+  try { await keytar.setPassword('Haoji', key, value || ''); return true; } catch (_) { return false; }
 });
 
 app.whenReady().then(createWindow);

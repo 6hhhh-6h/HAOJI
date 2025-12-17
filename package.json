@@ -5,7 +5,9 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "prepare": "husky install",
+    "scan:secrets": "node scripts/secret-scan.js"
   },
   "build": {
     "appId": "com.haoji.notes",
@@ -25,6 +27,10 @@
   },
   "devDependencies": {
     "electron": "^39.2.3",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "husky": "^9.0.0"
+  },
+  "dependencies": {
+    "keytar": "^7.9.0"
   }
 }
